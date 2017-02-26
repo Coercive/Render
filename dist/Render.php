@@ -21,7 +21,8 @@ class Render {
 
 	/** @var string Root Paths */
 	private $_sDirectory = '',
-			$_sTemplate = '';
+			$_sTemplate = '',
+			$_sForceTemplateLayout = '';
 
 	/** @var array Injected paths/datas */
 	private $_aPaths = [],
@@ -42,6 +43,7 @@ class Render {
 	private function _purge($bData = false) {
 		if($bData) { $this->_aGlobalDatas = $this->_aDatas = []; }
 		$this->_aPaths = $this->_aFiles = [];
+		$this->_sForceTemplateLayout = '';
         return $this;
 	}
 
@@ -149,6 +151,19 @@ class Render {
 	}
 
 	/**
+	 * FORCE TEMPLATE SETTER
+	 *
+	 * @param string $sTemplate
+	 * @return Render
+	 * @throws Exception
+	 */
+	public function forceTemplate($sTemplate) {
+		if(!$sTemplate || !is_string($sTemplate)) { throw new Exception('Template empty or not string type'); }
+		$this->_sForceTemplateLayout = trim($sTemplate, '/');
+		return $this;
+	}
+
+	/**
 	 * RENDER LAYOUT
      *
      * @return string
@@ -170,7 +185,7 @@ class Render {
 		if ($this->_aFiles) {
 			ob_start();
 			foreach ($this->_aFiles as $aFile) {
-				if(!$this->_sTemplate) $this->_sTemplate = $aFile['template'];
+				if(!$this->_sTemplate && $aFile['template']) $this->_sTemplate = $aFile['template'];
 				require($aFile['path']);
 			}
 			$this->_sViews = ob_get_contents();
@@ -178,14 +193,16 @@ class Render {
 		}
 
 		# Load layout
-		$sLayout = realpath("{$this->_sDirectory}/{$this->_sTemplate}/layout/layout.php");
+		$sTemplate = $this->_sForceTemplateLayout ?: $this->_sTemplate;
+		$sLPath = "{$this->_sDirectory}/{$sTemplate}/layout/layout." . self::DEFAUT_EXTENSION;
+		$sLayout = realpath($sLPath);
 		if (is_readable($sLayout)) {
 			ob_start();
 			require_once($sLayout);
 			$this->_sLayout = ob_get_contents();
 			ob_end_clean();
 		} else {
-		    throw new Exception("Demande de rendu d'un layout inexistant : {$this->_sDirectory}/{$this->_sTemplate}/layout/layout.php");
+		    throw new Exception("Demande de rendu d'un layout inexistant : {$sLPath}");
 		}
 
 		# Delete datas
