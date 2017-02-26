@@ -16,7 +16,7 @@
     },
     "require-dev": {},
     "autoload": {
-        "psr-4": { "Coercive\\Utility\\Router\\": "dist/" }
+        "psr-4": { "Coercive\\Utility\\Render\\": "dist/" }
     },
     "minimum-stability" : "dev",
     "extra": {
