@@ -7,7 +7,7 @@ use Exception;
  * Render
  * PHP Version 	7
  *
- * @version		Beta
+ * @version		1
  * @package		Coercive\Utility\Render
  * @link		@link https://github.com/Coercive/Render
  *
