@@ -198,7 +198,7 @@ class Render {
 		$sLayout = realpath($sLPath);
 		if (is_readable($sLayout)) {
 			ob_start();
-			require_once($sLayout);
+			require($sLayout);
 			$this->_sLayout = ob_get_contents();
 			ob_end_clean();
 		} else {
