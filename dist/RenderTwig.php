@@ -25,9 +25,12 @@ class RenderTwig
 {
 	const DEFAUT_EXTENSION = '.html.twig';
 
-	/** @var string Root Paths */
-	private $directory = '';
-	private $extension = '';
+	/** @var string Root adn directories paths */
+	private $root = '';
+	private $directories = [];
+
+	/** @var string Auto extension for view path and view path */
+	private $extension = self::DEFAUT_EXTENSION;
 	private $view = '';
 
 	/** @var array Injected datas */
@@ -52,14 +55,76 @@ class RenderTwig
 	];
 
 	/**
-	 * Render constructor.
-     *
-     * @param string $directory : Root directory witch contain templates
+	 * RenderTwig constructor.
+	 *
+	 * @param string $root [optional]
 	 */
-	public function __construct(string $directory)
+	public function __construct(string $root = null)
 	{
-		$this->directory = rtrim($directory, '/') . '/';
-		$this->extension = self::DEFAUT_EXTENSION;
+		$this->root = $root;
+	}
+
+	/**
+	 * ADD Directories paths
+	 *
+	 * @param array $directories : Root directories witch contain templates files
+	 * @return RenderTwig
+	 */
+	public function addDirectories(array $directories): RenderTwig
+	{
+		foreach ($directories as $directory) {
+			$this->addDirectory($directory);
+		}
+		return $this;
+	}
+
+	/**
+	 * SETTER Directories paths
+	 *
+	 * @param array $directories : Root directories witch contain templates files
+	 * @return RenderTwig
+	 */
+	public function setDirectories(array $directories): RenderTwig
+	{
+		$this->clearsDirectories();
+		$this->addDirectories($directory);
+		return $this;
+	}
+
+	/**
+	 * Add Directory path
+	 *
+	 * @param string $directory : Root directory witch contain templates files
+	 * @return RenderTwig
+	 */
+	public function addDirectory(string $directory): RenderTwig
+	{
+		$this->directories[] = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+		return $this;
+	}
+
+	/**
+	 * SETTER Directory path
+	 *
+	 * @param string $directory : Root directory witch contain templates files
+	 * @return RenderTwig
+	 */
+	public function setDirectory(string $directory): RenderTwig
+	{
+		$this->clearsDirectories();
+		$this->addDirectory($directory);
+		return $this;
+	}
+
+	/**
+	 * Delete directory list
+	 *
+	 * @return RenderTwig
+	 */
+	public function clearsDirectories(): RenderTwig
+	{
+		$this->directories = [];
+		return $this;
 	}
 
 	/**
@@ -291,7 +356,7 @@ class RenderTwig
 	public function render(): string
 	{
 		# Prepare Twig loader
-		$loader = new Twig_Loader_Filesystem($this->directory);
+		$loader = new Twig_Loader_Filesystem($this->directories, $this->root);
 
 		# Prepare Twig environnement with options
 		$twig = new Twig_Environment($loader, $this->options);
