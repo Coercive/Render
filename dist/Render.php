@@ -5,94 +5,96 @@ use Exception;
 
 /**
  * Render
- * PHP Version 	7
  *
- * @version		1
  * @package		Coercive\Utility\Render
- * @link		@link https://github.com/Coercive/Render
+ * @link		https://github.com/Coercive/Render
  *
  * @author  	Anthony Moral <contact@coercive.fr>
- * @copyright   (c) 2016 - 2017 Anthony Moral
- * @license 	http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
+ * @copyright   2018 Anthony Moral
+ * @license 	MIT
  */
-class Render {
-
+class Render
+{
 	const DEFAUT_EXTENSION = 'php';
 
 	/** @var string Root Paths */
-	private $_sDirectory = '',
-			$_sTemplate = '',
-			$_sForceTemplateLayout = '';
+	private
+		$directory = '',
+		$template = '',
+		$forceTemplate = '';
 
 	/** @var array Injected paths/datas */
-	private $_aPaths = [],
-			$_aGlobalDatas = [],
-			$_aDatas = [],
-			$_aFiles = [];
+	private
+		$paths = [],
+		$globals = [],
+		$datas = [],
+		$files = [];
 
     /** @var string Processed Views Content */
-    private $_sViews = '',
-            $_sLayout = '';
+    private
+	    $views = '',
+	    $layout = '';
 
 	/**
 	 * PURGE
 	 *
-	 * @param bool $bData [optional] : Delete injected datas
+	 * @param bool $data [optional] : Delete injected datas
      * @return Render
 	 */
-	private function _purge($bData = false) {
-		if($bData) { $this->_aGlobalDatas = $this->_aDatas = []; }
-		$this->_aPaths = $this->_aFiles = [];
-		$this->_sForceTemplateLayout = '';
+	private function _purge(bool $data = false): Render
+	{
+		if($data) { $this->globals = $this->datas = []; }
+		$this->paths = $this->files = [];
+		$this->forceTemplate = '';
         return $this;
 	}
 
     /**
      * PREPARE VIEW PATH
      *
-     * @param string $sViewPath
+     * @param string $path
      * @return array
      * @throws Exception
      */
-	private function _prepareViewPath($sViewPath) {
-
+	private function _prepareViewPath($path): array
+	{
         # Delete spaces and start/end slashes
-        $sPath = trim(str_replace(' ', '', $sViewPath), '/');
+        $path = trim(str_replace(' ', '', $path), '/');
 
         # TEMPLATE
-        preg_match('`^(?P<template>[a-z0-9_-]*)/.*`i', $sPath, $aMatches);
-        if(empty($aMatches['template']) || !is_dir($this->_sDirectory.$aMatches['template'])) {
-            throw new Exception('No template found, path : ' . $sPath);
+        preg_match('`^(?P<template>[a-z0-9_-]*)/.*`i', $path, $matches);
+        if(empty($matches['template']) || !is_dir($this->directory. $matches['template'])) {
+            throw new Exception('No template found, path : ' . $path);
         }
-        $sTemplate = $aMatches['template'];
+        $template = $matches['template'];
 
         # EXTENSION
-        preg_match('`\.(?P<extension>[a-z0-9]+)$`i', $sPath, $aMatches);
-        $sExtension = empty($aMatches['extension']) ? self::DEFAUT_EXTENSION : strtolower($aMatches['extension']);
-        $sAddExt = empty($aMatches['extension']) ? '.' . self::DEFAUT_EXTENSION : '';
+        preg_match('`\.(?P<extension>[a-z0-9]+)$`i', $path, $matches);
+        $extension = empty($matches['extension']) ? self::DEFAUT_EXTENSION : strtolower($matches['extension']);
+        $addExt = empty($matches['extension']) ? '.' . self::DEFAUT_EXTENSION : '';
 
         # VIEW
-        $sFile = realpath($this->_sDirectory . $sPath . $sAddExt);
-        if (!$sFile || !is_readable($sFile)) {
-            throw new Exception("View file not found : {$this->_sDirectory}{$sPath}{$sAddExt}");
+        $file = realpath($this->directory . $path . $addExt);
+        if (!$file || !is_readable($file)) {
+            throw new Exception("View file not found : {$this->directory}{$path}{$addExt}");
         }
 
         # FILE
         return [
-            'path' => $sFile,
-            'template' => $sTemplate,
-            'extension' => $sExtension
+            'path' => $file,
+            'template' => $template,
+            'extension' => $extension
         ];
-
     }
 
 	/**
 	 * Render constructor.
      *
-     * @param string $sRootDirectory : Root directory witch contain templates
+     * @param string $directory : Root directory witch contain templates
 	 */
-	public function __construct($sRootDirectory) {
-		$this->_sDirectory = rtrim($sRootDirectory, '/') . '/';
+	public function __construct(string $directory)
+	{
+		$this->directory = rtrim($directory, '/') . '/';
 	}
 
     /**
@@ -100,51 +102,54 @@ class Render {
      *
      * @return string
      */
-    public function getViews() {
-        return $this->_sViews;
+    public function getViews(): string
+    {
+        return $this->views;
     }
 
     /**
      * SETTER Global Datas
      *
-     * @param array $aDatas
+     * @param array $datas
      * @return Render
      * @throws Exception
      */
-    public function setGlobalDatas($aDatas) {
-        if(!is_array($aDatas)) { throw new Exception('Datas must be array type'); }
-        $this->_aGlobalDatas = $aDatas ?: [];
+    public function setGlobalDatas(array $datas): Render
+    {
+        if(!is_array($datas)) { throw new Exception('Datas must be array type'); }
+        $this->globals = $datas ?: [];
         return $this;
     }
 
 	/**
 	 * SETTER Datas
 	 *
-	 * @param array $aDatas
+	 * @param array $datas
 	 * @return Render
      * @throws Exception
 	 */
-	public function setDatas($aDatas) {
-        if(!is_array($aDatas)) { throw new Exception('Datas must be array type'); }
-		$this->_aDatas = $aDatas;
+	public function setDatas(array $datas): Render
+	{
+        if(!is_array($datas)) { throw new Exception('Datas must be array type'); }
+		$this->datas = $datas;
 		return $this;
 	}
 
 	/**
 	 * SETTER path
 	 *
-	 * @param mixed $mPath
+	 * @param mixed $paths
 	 * @return Render
      * @throws Exception
 	 */
-	public function setPath($mPath) {
-
-		if(!$mPath) { return $this; }
-		$this->_aPaths = (array) $mPath;
+	public function setPath($paths): Render
+	{
+		if(!$paths) { return $this; }
+		$this->paths = (array) $paths;
 
 		# Prepare file path
-		foreach ($this->_aPaths as $sPath) {
-			$this->_aFiles[] = $this->_prepareViewPath($sPath);
+		foreach ($this->paths as $path) {
+			$this->files[] = $this->_prepareViewPath($path);
 		}
 
 		return $this;
@@ -153,13 +158,14 @@ class Render {
 	/**
 	 * FORCE TEMPLATE SETTER
 	 *
-	 * @param string $sTemplate
+	 * @param string $template
 	 * @return Render
 	 * @throws Exception
 	 */
-	public function forceTemplate($sTemplate) {
-		if(!$sTemplate || !is_string($sTemplate)) { throw new Exception('Template empty or not string type'); }
-		$this->_sForceTemplateLayout = trim($sTemplate, '/');
+	public function forceTemplate(string $template): Render
+	{
+		if(!$template || !is_string($template)) { throw new Exception('Template empty or not string type'); }
+		$this->forceTemplate = trim($template, '/');
 		return $this;
 	}
 
@@ -169,80 +175,77 @@ class Render {
      * @return string
      * @throws Exception
 	 */
-	public function render() {
-
+	public function render(): string
+	{
 		# INIT
-		$this->_sTemplate = '';
-		$this->_sViews = '';
+		$this->template = '';
+		$this->views = '';
 
         # Prepare global datas
-        if ($this->_aGlobalDatas) { extract($this->_aGlobalDatas); }
+        if ($this->globals) { extract($this->globals); }
 
 		# Prepare datas
-		if ($this->_aDatas) { extract($this->_aDatas); }
+		if ($this->datas) { extract($this->datas); }
 
 		# Buffer views
-		if ($this->_aFiles) {
+		if ($this->files) {
 			ob_start();
-			foreach ($this->_aFiles as $aFile) {
-				if(!$this->_sTemplate && $aFile['template']) $this->_sTemplate = $aFile['template'];
-				require($aFile['path']);
+			foreach ($this->files as $file) {
+				if(!$this->template && $file['template']) $this->template = $file['template'];
+				require($file['path']);
 			}
-			$this->_sViews = ob_get_contents();
+			$this->views = ob_get_contents();
 			ob_end_clean();
 		}
 
 		# Load layout
-		$sTemplate = $this->_sForceTemplateLayout ?: $this->_sTemplate;
-		$sLPath = "{$this->_sDirectory}/{$sTemplate}/layout/layout." . self::DEFAUT_EXTENSION;
-		$sLayout = realpath($sLPath);
-		if (is_readable($sLayout)) {
+		$template = $this->forceTemplate ?: $this->template;
+		$layoutPath = "{$this->directory}/{$template}/layout/layout." . self::DEFAUT_EXTENSION;
+		$layout = realpath($layoutPath);
+		if (is_readable($layout)) {
 			ob_start();
-			require($sLayout);
-			$this->_sLayout = ob_get_contents();
+			require($layout);
+			$this->layout = ob_get_contents();
 			ob_end_clean();
 		} else {
-		    throw new Exception("Demande de rendu d'un layout inexistant : {$sLPath}");
+		    throw new Exception("Demande de rendu d'un layout inexistant : {$layoutPath}");
 		}
 
 		# Delete datas
 		$this->_purge(true);
 
-		return $this->_sLayout;
-
+		return $this->layout;
 	}
 
     /**
      * RENDER VIEW ONLY
      *
-     * @param string $sViewPath
-     * @param array $aDatas
+     * @param string $path
+     * @param array  $datas
      * @return string
      * @throws Exception
      */
-	public function view($sViewPath, $aDatas = []) {
-
+	public function view(string $path, $datas = []): string
+	{
         # Prepare view
-        $sPath = $this->_prepareViewPath($sViewPath)['path'];
+		$path = $this->_prepareViewPath($path)['path'];
 
         # Verify datas
-        if(!is_array($aDatas)) {
+        if(!is_array($datas)) {
             throw new Exception('Datas must be array');
         }
 
         # Prepare global datas
-        if ($this->_aGlobalDatas) { extract($this->_aGlobalDatas); }
+        if ($this->globals) { extract($this->globals); }
 
         # Prepare specific view datas
-        if ($aDatas) { extract($aDatas); }
+        if ($datas) { extract($datas); }
 
         # Buffer views
         ob_start();
-        require($sPath);
-        $sView = ob_get_contents();
+        require($path);
+        $view = ob_get_contents();
         ob_end_clean();
-
-        return $sView;
-
+        return $view;
     }
 }
