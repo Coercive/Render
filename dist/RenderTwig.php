@@ -18,7 +18,7 @@ use Twig_TokenParserInterface;
  * @link		https://github.com/Coercive/Render
  *
  * @author  	Anthony Moral <contact@coercive.fr>
- * @copyright   2018 Anthony Moral
+ * @copyright   2019 Anthony Moral
  * @license 	MIT
  */
 class RenderTwig
@@ -87,7 +87,7 @@ class RenderTwig
 	public function setDirectories(array $directories): RenderTwig
 	{
 		$this->clearsDirectories();
-		$this->addDirectories($directory);
+		$this->addDirectories($directories);
 		return $this;
 	}
 
