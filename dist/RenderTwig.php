@@ -324,6 +324,19 @@ class RenderTwig
 	}
 
 	/**
+	 * Clear twig cache directory
+	 *
+	 * @return $this
+	 */
+	public function clearCache(): RenderTwig
+	{
+		if($this->options['cache'] && !is_dir($this->options['cache'])) {
+			@system('rm -rf ' . escapeshellarg($this->options['cache']));
+		}
+		return $this;
+	}
+
+	/**
 	 * Setter Strict Variables
 	 *
 	 * @param bool $state
