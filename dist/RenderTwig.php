@@ -330,7 +330,7 @@ class RenderTwig
 	 */
 	public function clearCache(): RenderTwig
 	{
-		if($this->options['cache'] && !is_dir($this->options['cache'])) {
+		if($this->options['cache'] && is_dir($this->options['cache'])) {
 			@system('rm -rf ' . escapeshellarg($this->options['cache']));
 		}
 		return $this;
