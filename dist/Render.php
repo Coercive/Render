@@ -182,7 +182,7 @@ class Render
 	 */
 	public function setPath(string $path): Render
 	{
-		$this->files = $this->file($path);
+		$this->files = [$this->file($path)];
 		return $this;
 	}
 
