@@ -27,7 +27,6 @@ class Render
 
 	/** @var array Injected paths/datas */
 	private
-		$paths = [],
 		$globals = [],
 		$datas = [],
 		$files = [];
@@ -218,10 +217,13 @@ class Render
 	public function reset(bool $data = false): Render
 	{
 		if($data) {
-			$this->globals = $this->datas = [];
+			$this->globals = [];
+			$this->datas = [];
 		}
 		$this->exceptions = [];
-		$this->paths = $this->files = [];
+		$this->files = [];
+		$this->template = '';
+		$this->views = '';
 		$this->forceTemplate = '';
 		return $this;
 	}
@@ -288,7 +290,7 @@ class Render
 	public function view(string $path, array $datas = []): string
 	{
         # Prepare view
-		$path = $this->file($path)['path'];
+		$path = $this->file($path)['path'] ?? '';
 		if(!$path) {
 			return '';
 		}
