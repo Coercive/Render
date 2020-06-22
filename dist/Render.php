@@ -273,6 +273,11 @@ class Render
 		$this->template = '';
 		$this->views = '';
 
+		# Skip on error
+		if($this->exceptions) {
+			return '';
+		}
+
         # Prepare global datas
         if ($this->globals) {
         	extract($this->globals);
@@ -287,7 +292,9 @@ class Render
 		if ($this->files) {
 			ob_start();
 			foreach ($this->files as $file) {
-				require($file['path']);
+				if($file['path']) {
+					require($file['path']);
+				}
 			}
 			$this->views = ob_get_contents();
 			ob_end_clean();
