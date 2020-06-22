@@ -15,9 +15,10 @@ Load
 use Coercive\Utility\Render\Render;
 
 # Load
-$render = new Render( TEMPLATES_ROOT_PATH );
+$render = new Render( 'TEMPLATES_ROOT_PATH' );
 
 # Set globals vars (global for all views and sub injected views)
+# use $render->setGlobalDatas for override or add for conserve previous added
 $render->addGlobalDatas([
 	'app' => new App(),
 	'header' => new Header(),
@@ -26,6 +27,7 @@ $render->addGlobalDatas([
 ]);
 
 # Set Views Datas
+# use $render->setDatas for override or add for conserve previous added
 $render->addDatas([
 	'title' => 'My Custom Title',
 	'content' => 'Lorem Ipsum Text',
@@ -33,10 +35,11 @@ $render->addDatas([
 	...
 ]);
 
-# Set View(s) path
-$render->addPath('/TemplateName/ViewDir/Viewname');
+# Set View path
+# use $render->setPath for override or add for conserve previous added
+$render->setPath('/TemplateName/ViewDir/Viewname');
 
-# Multi
+# Multi views
 foreach([...] as $path) {
     $render->addPath($path);
 }
