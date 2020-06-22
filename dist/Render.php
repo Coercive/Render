@@ -178,7 +178,6 @@ class Render
 	 *
 	 * @param string $path
 	 * @return Render
-     * @throws Exception
 	 */
 	public function setPath(string $path): Render
 	{
@@ -191,7 +190,6 @@ class Render
 	 *
 	 * @param string $path
 	 * @return Render
-     * @throws Exception
 	 */
 	public function addPath(string $path): Render
 	{
@@ -234,7 +232,6 @@ class Render
 	 *
 	 * @param string $template
 	 * @return Render
-	 * @throws Exception
 	 */
 	public function forceTemplate(string $template): Render
 	{
