@@ -267,7 +267,7 @@ class Render
 	public function render(): string
 	{
 		# INIT
-		$this->template = '';
+		$this->layout = '';
 		$this->views = '';
 
 		# Skip on error
