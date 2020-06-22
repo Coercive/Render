@@ -15,42 +15,56 @@ Load
 use Coercive\Utility\Render\Render;
 
 # Load
-$oRender = new Render( TEMPLATES_ROOT_PATH );
+$render = new Render( TEMPLATES_ROOT_PATH );
 
 # Set globals vars (global for all views and sub injected views)
-$oRender->setGlobalDatas([
+$render->addGlobalDatas([
 	'app' => new App(),
-	'header' => new Header()
+	'header' => new Header(),
 	'handler' => new Handler()
 	...
 ]);
 
 # Set Views Datas
-$oRender->setDatas([
+$render->addDatas([
 	'title' => 'My Custom Title',
-	'content' => 'Lorem Ipsum Text'
+	'content' => 'Lorem Ipsum Text',
 	'link' => 'Visit my website : <a href="#">my-web-site.com</a>'
 	...
 ]);
 
 # Set View(s) path
-$oRender->setPath('/TemplateName/ViewDir/Viewname');
+$render->addPath('/TemplateName/ViewDir/Viewname');
 
 # Multi
-$oRender->setPath([
-	'/CommonTemplate/CommonTopBar/top_bar'
-	'/EventTemplate/OfferSubscribe/panel_custom.php',
-	'/EventTemplate/OfferSubscribe/sidebar_promotional',
-	'/CommonTemplate/CommonBottomBar/bottom_bar'
-]);
+foreach([...] as $path) {
+    $render->addPath($path);
+}
 
 # If multiple template, you need to set where load a layout
 # Or if you need to load in specific other template for a/b testing or events ...
-$oRender->forceTemplate('MyEventTemplate2017');
+$render->forceTemplate('MyEventTemplate2017');
 
 # Now, Render !
-echo $oRender->render();
+echo $render->render();
+```
 
+## Errors
+```php
+use Coercive\Utility\Render\Render;
+
+# Load
+$render = new Render( 'TEMPLATES_ROOT_PATH' );
+
+# You can see all errors like this
+foreach($render->getExceptions() as $exception) {
+    echo $exception->getMessage();
+}
+
+# Or you can log error when it's added with handler
+$render->debug(function ($exception) {
+    error_log(print_r($exception->getMessage(), true));
+});
 ```
 
 Tree
