@@ -1,21 +1,23 @@
 <?php
 namespace Coercive\Utility\Render;
 
+use Closure;
 use Exception;
 
 /**
  * Render
  *
- * @package		Coercive\Utility\Render
- * @link		https://github.com/Coercive/Render
+ * @package Coercive\Utility\Render
+ * @link https://github.com/Coercive/Render
  *
- * @author  	Anthony Moral <contact@coercive.fr>
- * @copyright   2018 Anthony Moral
- * @license 	MIT
+ * @author Anthony Moral <contact@coercive.fr>
+ * @copyright 2020 Anthony Moral
+ * @license MIT
  */
 class Render
 {
 	const DEFAUT_EXTENSION = 'php';
+	const DEFAUT_TEMPLATE = 'default';
 
 	/** @var string Root Paths */
 	private
@@ -35,51 +37,54 @@ class Render
 	    $views = '',
 	    $layout = '';
 
-	/**
-	 * PURGE
-	 *
-	 * @param bool $data [optional] : Delete injected datas
-     * @return Render
-	 */
-	private function _purge(bool $data = false): Render
-	{
-		if($data) { $this->globals = $this->datas = []; }
-		$this->paths = $this->files = [];
-		$this->forceTemplate = '';
-        return $this;
-	}
+    /** @var Exception[] List of errors for debug */
+    private $exceptions = [];
+
+    /** @var Closure customer debug function that get Exception as parameter like : function(Exception $e) { ... } */
+    private $closure = null;
 
     /**
      * PREPARE VIEW PATH
      *
      * @param string $path
      * @return array
-     * @throws Exception
      */
-	private function _prepareViewPath($path): array
+	private function file(string $path): array
 	{
         # Delete spaces and start/end slashes
         $path = trim(str_replace(' ', '', $path), '/');
 
-        # TEMPLATE
+        # Detect template
         preg_match('`^(?P<template>[a-z0-9_-]*)/.*`i', $path, $matches);
-        if(empty($matches['template']) || !is_dir($this->directory. $matches['template'])) {
-            throw new Exception('No template found, path : ' . $path);
-        }
-        $template = $matches['template'];
+		if(empty($matches['template']) || !is_dir($this->directory . $matches['template'])) {
+			$e = new Exception('Template directory does not exist : ' . $path);
+			$this->addException($e);
+			$template = self::DEFAUT_TEMPLATE;
+		}
+		else {
+			$template = $matches['template'];
+		}
 
-        # EXTENSION
+		# Add template for full render system
+		if(!$this->template && $template) {
+			$this->template = $template;
+		}
+
+        # Detect extension
         preg_match('`\.(?P<extension>[a-z0-9]+)$`i', $path, $matches);
         $extension = empty($matches['extension']) ? self::DEFAUT_EXTENSION : strtolower($matches['extension']);
         $addExt = empty($matches['extension']) ? '.' . self::DEFAUT_EXTENSION : '';
 
-        # VIEW
-        $file = realpath($this->directory . $path . $addExt);
-        if (!$file || !is_readable($file)) {
-            throw new Exception("View file not found : {$this->directory}{$path}{$addExt}");
+        # Handle view file
+		$target = $this->directory . $path . $addExt;
+        $file = realpath($target);
+        if (!$file || !is_file($file)) {
+            $e = new Exception("View file does not exist : $target");
+			$this->addException($e);
+			$file = '';
         }
 
-        # FILE
+		# Build return statement
         return [
             'path' => $file,
             'template' => $template,
@@ -108,55 +113,91 @@ class Render
     }
 
     /**
-     * SETTER Global Datas
+     * Add global data
      *
-     * @param array $datas
+     * @param array $data
      * @return Render
-     * @throws Exception
      */
-    public function setGlobalDatas(array $datas): Render
+    public function addGlobalDatas(array $data): Render
     {
-        if(!is_array($datas)) { throw new Exception('Datas must be array type'); }
-        $this->globals = $datas ?: [];
+        $this->globals = array_merge($this->globals, $data);
         return $this;
     }
 
 	/**
-	 * SETTER Datas
+	 * Add datas
 	 *
-	 * @param array $datas
+	 * @param array $data
 	 * @return Render
-     * @throws Exception
 	 */
-	public function setDatas(array $datas): Render
+	public function addDatas(array $data): Render
 	{
-        if(!is_array($datas)) { throw new Exception('Datas must be array type'); }
-		$this->datas = $datas;
+		$this->datas = array_merge($this->datas, $data);
 		return $this;
 	}
 
 	/**
-	 * SETTER path
+	 * Add view path to the file stack
 	 *
-	 * @param mixed $paths
+	 * @param string $path
 	 * @return Render
      * @throws Exception
 	 */
-	public function setPath($paths): Render
+	public function addPath(string $path): Render
 	{
-		if(!$paths) { return $this; }
-		$this->paths = (array) $paths;
-
-		# Prepare file path
-		foreach ($this->paths as $path) {
-			$this->files[] = $this->_prepareViewPath($path);
+		if($path) {
+			$this->files[] = $this->file($path);
 		}
-
 		return $this;
 	}
 
 	/**
-	 * FORCE TEMPLATE SETTER
+	 * Add Exception for external debug handler
+	 *
+	 * @param Exception $e
+	 * @return Render
+	 */
+	public function addException(Exception $e): Render
+	{
+		$this->exceptions[] = $e;
+		if(null !== $this->closure) {
+			($this->closure)($e);
+		}
+		return $this;
+	}
+
+	/**
+	 * Get Exception list for external debug
+	 *
+	 * @return Exception[]
+	 */
+	public function getExceptions(): array
+	{
+		return $this->exceptions;
+	}
+
+	/**
+	 * Set a debug function
+	 *
+	 * It will log all given exceptions like :
+	 * function(Exception $e) { ... }
+	 *
+	 * Can be reset with give no parameter
+	 *
+	 * @param Closure|null $function
+	 * @return $this
+	 */
+	public function debug(Closure $function = null): Render
+	{
+		$this->closure = $function;
+		return $this;
+	}
+
+	/**
+	 * Force template setter
+	 *
+	 * When declare multiple views, the automatic detect can fail
+	 * So you can override template here
 	 *
 	 * @param string $template
 	 * @return Render
@@ -164,16 +205,31 @@ class Render
 	 */
 	public function forceTemplate(string $template): Render
 	{
-		if(!$template || !is_string($template)) { throw new Exception('Template empty or not string type'); }
 		$this->forceTemplate = trim($template, '/');
 		return $this;
 	}
 
 	/**
-	 * RENDER LAYOUT
+	 * Reset class
+	 *
+	 * @param bool $data [optional] : Delete injected datas
+	 * @return Render
+	 */
+	public function reset(bool $data = false): Render
+	{
+		if($data) {
+			$this->globals = $this->datas = [];
+		}
+		$this->exceptions = [];
+		$this->paths = $this->files = [];
+		$this->forceTemplate = '';
+		return $this;
+	}
+
+	/**
+	 * Render layout
      *
      * @return string
-     * @throws Exception
 	 */
 	public function render(): string
 	{
@@ -182,16 +238,19 @@ class Render
 		$this->views = '';
 
         # Prepare global datas
-        if ($this->globals) { extract($this->globals); }
+        if ($this->globals) {
+        	extract($this->globals);
+        }
 
 		# Prepare datas
-		if ($this->datas) { extract($this->datas); }
+		if ($this->datas) {
+			extract($this->datas);
+		}
 
 		# Buffer views
 		if ($this->files) {
 			ob_start();
 			foreach ($this->files as $file) {
-				if(!$this->template && $file['template']) $this->template = $file['template'];
 				require($file['path']);
 			}
 			$this->views = ob_get_contents();
@@ -202,18 +261,20 @@ class Render
 		$template = $this->forceTemplate ?: $this->template;
 		$layoutPath = "{$this->directory}/{$template}/layout/layout." . self::DEFAUT_EXTENSION;
 		$layout = realpath($layoutPath);
-		if (is_readable($layout)) {
+		if (is_file($layout)) {
 			ob_start();
 			require($layout);
 			$this->layout = ob_get_contents();
 			ob_end_clean();
-		} else {
-		    throw new Exception("Demande de rendu d'un layout inexistant : {$layoutPath}");
+		}
+		else {
+		    $e = new Exception("Layout file does not exist : $layoutPath");
+		    $this->addException($e);
+			$this->layout = '';
 		}
 
 		# Delete datas
-		$this->_purge(true);
-
+		$this->reset(true);
 		return $this->layout;
 	}
 
@@ -221,25 +282,26 @@ class Render
      * RENDER VIEW ONLY
      *
      * @param string $path
-     * @param array  $datas
+     * @param array $datas [optional]
      * @return string
-     * @throws Exception
      */
-	public function view(string $path, $datas = []): string
+	public function view(string $path, array $datas = []): string
 	{
         # Prepare view
-		$path = $this->_prepareViewPath($path)['path'];
-
-        # Verify datas
-        if(!is_array($datas)) {
-            throw new Exception('Datas must be array');
-        }
+		$path = $this->file($path)['path'];
+		if(!$path) {
+			return '';
+		}
 
         # Prepare global datas
-        if ($this->globals) { extract($this->globals); }
+        if ($this->globals) {
+        	extract($this->globals);
+        }
 
         # Prepare specific view datas
-        if ($datas) { extract($datas); }
+        if ($datas) {
+        	extract($datas);
+        }
 
         # Buffer views
         ob_start();
