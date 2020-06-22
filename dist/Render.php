@@ -52,21 +52,20 @@ class Render
 	{
         # Delete spaces and start/end slashes
         $path = trim(str_replace(' ', '', $path), '/');
+        if(!$path) {
+			$e = new Exception('Empty given path');
+			$this->addException($e);
+		}
 
         # Detect template
         preg_match('`^(?P<template>[a-z0-9_-]*)/.*`i', $path, $matches);
 		if(empty($matches['template']) || !is_dir($this->directory . $matches['template'])) {
 			$e = new Exception('Template directory does not exist : ' . $path);
 			$this->addException($e);
-			$template = self::DEFAUT_TEMPLATE;
+			$this->template = self::DEFAUT_TEMPLATE;
 		}
 		else {
-			$template = $matches['template'];
-		}
-
-		# Add template for full render system
-		if(!$this->template && $template) {
-			$this->template = $template;
+			$this->template = $matches['template'];
 		}
 
         # Detect extension
@@ -86,10 +85,25 @@ class Render
 		# Build return statement
         return [
             'path' => $file,
-            'template' => $template,
+            'template' => $this->template,
             'extension' => $extension
         ];
     }
+
+	/**
+	 * Add Exception for external debug handler
+	 *
+	 * @param Exception $e
+	 * @return Render
+	 */
+	private function addException(Exception $e): Render
+	{
+		$this->exceptions[] = $e;
+		if(null !== $this->closure) {
+			($this->closure)($e);
+		}
+		return $this;
+	}
 
 	/**
 	 * Render constructor.
@@ -112,7 +126,19 @@ class Render
     }
 
     /**
-     * Add global data
+     * Set global data (override)
+     *
+     * @param array $data
+     * @return Render
+     */
+    public function setGlobalDatas(array $data): Render
+    {
+        $this->globals = $data;
+        return $this;
+    }
+
+    /**
+     * Add global data (merge)
      *
      * @param array $data
      * @return Render
@@ -124,7 +150,19 @@ class Render
     }
 
 	/**
-	 * Add datas
+	 * Add datas (override)
+	 *
+	 * @param array $data
+	 * @return Render
+	 */
+	public function setDatas(array $data): Render
+	{
+		$this->datas = $data;
+		return $this;
+	}
+
+	/**
+	 * Add datas (merge)
 	 *
 	 * @param array $data
 	 * @return Render
@@ -136,7 +174,20 @@ class Render
 	}
 
 	/**
-	 * Add view path to the file stack
+	 * Set view path to the file stack (override)
+	 *
+	 * @param string $path
+	 * @return Render
+     * @throws Exception
+	 */
+	public function setPath(string $path): Render
+	{
+		$this->files = $this->file($path);
+		return $this;
+	}
+
+	/**
+	 * Add view path to the file stack 'merge)
 	 *
 	 * @param string $path
 	 * @return Render
@@ -144,24 +195,7 @@ class Render
 	 */
 	public function addPath(string $path): Render
 	{
-		if($path) {
-			$this->files[] = $this->file($path);
-		}
-		return $this;
-	}
-
-	/**
-	 * Add Exception for external debug handler
-	 *
-	 * @param Exception $e
-	 * @return Render
-	 */
-	public function addException(Exception $e): Render
-	{
-		$this->exceptions[] = $e;
-		if(null !== $this->closure) {
-			($this->closure)($e);
-		}
+		$this->files[] = $this->file($path);
 		return $this;
 	}
 
