@@ -14,23 +14,23 @@ use Twig_TokenParserInterface;
 /**
  * Render Twig
  *
- * @package		Coercive\Utility\Render
- * @link		https://github.com/Coercive/Render
+ * @package Coercive\Utility\Render
+ * @link https://github.com/Coercive/Render
  *
- * @author  	Anthony Moral <contact@coercive.fr>
- * @copyright   2019 Anthony Moral
- * @license 	MIT
+ * @author Anthony Moral <contact@coercive.fr>
+ * @copyright 2020 Anthony Moral
+ * @license MIT
  */
 class RenderTwig
 {
-	const DEFAUT_EXTENSION = '.html.twig';
+	const DEFAULT_EXTENSION = '.html.twig';
 
 	/** @var string Root adn directories paths */
 	private $root = '';
 	private $directories = [];
 
 	/** @var string Auto extension for view path and view path */
-	private $extension = self::DEFAUT_EXTENSION;
+	private $extension = self::DEFAULT_EXTENSION;
 	private $view = '';
 
 	/** @var array Injected datas */
@@ -237,7 +237,7 @@ class RenderTwig
 	 * @param string $extension [optional]
 	 * @return RenderTwig
 	 */
-	public function setFileExtension(string $extension = self::DEFAUT_EXTENSION): RenderTwig
+	public function setFileExtension(string $extension = self::DEFAULT_EXTENSION): RenderTwig
 	{
 		$this->extension = $extension;
 		return $this;

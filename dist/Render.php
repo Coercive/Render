@@ -16,8 +16,8 @@ use Exception;
  */
 class Render
 {
-	const DEFAUT_EXTENSION = 'php';
-	const DEFAUT_TEMPLATE = 'default';
+	const DEFAULT_EXTENSION = 'php';
+	const DEFAULT_TEMPLATE = 'default';
 
 	/** @var string Root Paths */
 	private
@@ -62,7 +62,7 @@ class Render
 		if(empty($matches['template']) || !is_dir($this->directory . $matches['template'])) {
 			$e = new Exception('Template directory does not exist : ' . $path);
 			$this->addException($e);
-			$this->template = self::DEFAUT_TEMPLATE;
+			$this->template = self::DEFAULT_TEMPLATE;
 		}
 		else {
 			$this->template = $matches['template'];
@@ -70,8 +70,8 @@ class Render
 
         # Detect extension
         preg_match('`\.(?P<extension>[a-z0-9]+)$`i', $path, $matches);
-        $extension = empty($matches['extension']) ? self::DEFAUT_EXTENSION : strtolower($matches['extension']);
-        $addExt = empty($matches['extension']) ? '.' . self::DEFAUT_EXTENSION : '';
+        $extension = empty($matches['extension']) ? self::DEFAULT_EXTENSION : strtolower($matches['extension']);
+        $addExt = empty($matches['extension']) ? '.' . self::DEFAULT_EXTENSION : '';
 
         # Handle view file
 		$target = $this->directory . $path . $addExt;
@@ -299,7 +299,7 @@ class Render
 
 		# Load layout
 		$template = $this->forceTemplate ?: $this->template;
-		$layoutPath = "{$this->directory}/{$template}/layout/layout." . self::DEFAUT_EXTENSION;
+		$layoutPath = "{$this->directory}/{$template}/layout/layout." . self::DEFAULT_EXTENSION;
 		$layout = realpath($layoutPath);
 		if (is_file($layout)) {
 			ob_start();
