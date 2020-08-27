@@ -299,7 +299,7 @@ class Render
 
 		# Load layout
 		$template = $this->forceTemplate ?: $this->template;
-		$layoutPath = "{$this->directory}/{$template}/layout/layout." . self::DEFAULT_EXTENSION;
+		$layoutPath = $this->directory . $template . '/layout/layout.' . self::DEFAULT_EXTENSION;
 		$layout = realpath($layoutPath);
 		if (is_file($layout)) {
 			ob_start();
