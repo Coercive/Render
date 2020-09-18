@@ -242,14 +242,17 @@ class Render
 	/**
 	 * Reset class
 	 *
-	 * @param bool $data [optional] : Delete injected datas
+	 * @param bool $datas [optional] : Delete injected datas
+	 * @param bool $globals [optional] : Delete injected globals
 	 * @return Render
 	 */
-	public function reset(bool $data = false): Render
+	public function reset(bool $datas = false, bool $globals = false): Render
 	{
-		if($data) {
-			$this->globals = [];
+		if($datas) {
 			$this->datas = [];
+		}
+		if($globals) {
+			$this->globals = [];
 		}
 		$this->exceptions = [];
 		$this->files = [];
