@@ -46,7 +46,7 @@ foreach([...] as $path) {
 
 # If multiple template, you need to set where load a layout
 # Or if you need to load in specific other template for a/b testing or events ...
-$render->forceTemplate('MyEventTemplate2017');
+$render->setTemplate('MyEventTemplate2017');
 
 # Now, Render !
 echo $render->render();

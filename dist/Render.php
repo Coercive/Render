@@ -11,7 +11,7 @@ use Exception;
  * @link https://github.com/Coercive/Render
  *
  * @author Anthony Moral <contact@coercive.fr>
- * @copyright 2020 Anthony Moral
+ * @copyright 2023 Anthony Moral
  * @license MIT
  */
 class Render
@@ -19,11 +19,16 @@ class Render
 	const DEFAULT_EXTENSION = 'php';
 	const DEFAULT_TEMPLATE = 'default';
 
+	const TEMPLATE_ORDER_GET_FIRST = 'first';
+	const TEMPLATE_ORDER_GET_LAST = 'last';
+
 	/** @var string Root Paths */
 	private
-		$directory = '',
-		$template = '',
-		$forceTemplate = '';
+		$directory,
+		$customTemplate = '',
+		$firstTemplate = '',
+		$lastTemplate = '',
+		$order = self::TEMPLATE_ORDER_GET_FIRST;
 
 	/** @var array Injected paths/datas */
 	private
@@ -31,123 +36,137 @@ class Render
 		$datas = [],
 		$files = [];
 
-    /** @var string Processed Views Content */
-    private
-	    $views = '',
-	    $layout = '';
+	/** @var string Processed Views Content */
+	private $views = '';
 
-    /** @var Exception[] List of errors for debug */
-    private $exceptions = [];
+	/** @var Exception[] List of errors for debug */
+	private $exceptions = [];
 
-    /** @var Closure customer debug function that get Exception as parameter like : function(Exception $e) { ... } */
-    private $closure = null;
+	/** @var Closure customer debug function that get Exception as parameter like : function(Exception $e) { ... } */
+	private $closure = null;
 
-    /**
-     * PREPARE VIEW PATH
-     *
-     * @param string $path
-     * @return array
-     */
+	/**
+	 * @param string $template
+	 * @return void
+	 */
+	private function setTemplates(string $template)
+	{
+		$this->lastTemplate = trim($template, '/');
+		if(!$this->firstTemplate) {
+			$this->firstTemplate = trim($template, '/');
+		}
+	}
+
+	/**
+	 * PREPARE VIEW PATH
+	 *
+	 * @param string $path
+	 * @return array
+	 */
 	private function file(string $path): array
 	{
-        # Delete spaces and start/end slashes
-        $path = trim(str_replace(' ', '', $path), '/');
-        if(!$path) {
+		# Delete spaces and start/end slashes
+		$path = trim(str_replace(' ', '', $path), '/');
+		if(!$path) {
 			$e = new Exception('Empty given path');
 			$this->addException($e);
 		}
 
-        # Detect template
-        preg_match('`^(?P<template>[a-z0-9_-]*)/.*`i', $path, $matches);
+		# Detect template
+		preg_match('`^(?P<template>[a-z0-9_-]*)/.*`i', $path, $matches);
 		if(empty($matches['template']) || !is_dir($this->directory . $matches['template'])) {
 			$e = new Exception('Template directory does not exist : ' . $path);
 			$this->addException($e);
-			$this->template = self::DEFAULT_TEMPLATE;
+			$template = self::DEFAULT_TEMPLATE;
 		}
 		else {
-			$this->template = $matches['template'];
+			$template = $matches['template'];
 		}
 
-        # Detect extension
-        preg_match('`\.(?P<extension>[a-z0-9]+)$`i', $path, $matches);
-        $extension = empty($matches['extension']) ? self::DEFAULT_EXTENSION : strtolower($matches['extension']);
-        $addExt = empty($matches['extension']) ? '.' . self::DEFAULT_EXTENSION : '';
+		# Detect extension
+		preg_match('`\.(?P<extension>[a-z0-9]+)$`i', $path, $matches);
+		$extension = empty($matches['extension']) ? self::DEFAULT_EXTENSION : strtolower($matches['extension']);
+		$addExt = empty($matches['extension']) ? '.' . self::DEFAULT_EXTENSION : '';
 
-        # Handle view file
+		# Handle view file
 		$target = $this->directory . $path . $addExt;
-        $file = realpath($target);
-        if (!$file || !is_file($file)) {
-            $e = new Exception("View file does not exist : $target");
+		$file = realpath($target);
+		if (!$file || !is_file($file)) {
+			$e = new Exception("View file does not exist : $target");
 			$this->addException($e);
 			$file = '';
-        }
+		}
 
 		# Build return statement
-        return [
-            'path' => $file,
-            'template' => $this->template,
-            'extension' => $extension
-        ];
-    }
+		return [
+			'path' => $file,
+			'template' => $template,
+			'extension' => $extension
+		];
+	}
 
 	/**
 	 * Add Exception for external debug handler
 	 *
 	 * @param Exception $e
-	 * @return Render
+	 * @return void
 	 */
-	private function addException(Exception $e): Render
+	private function addException(Exception $e)
 	{
 		$this->exceptions[] = $e;
 		if(null !== $this->closure) {
 			($this->closure)($e);
 		}
-		return $this;
 	}
 
 	/**
 	 * Render constructor.
-     *
-     * @param string $directory : Root directory witch contain templates
+	 *
+	 * @param string $directory : Root directory witch contain templates
+	 * @param string $template [optional]
+	 * @return void
 	 */
-	public function __construct(string $directory)
+	public function __construct(string $directory, string $template = '')
 	{
 		$this->directory = rtrim($directory, '/') . '/';
+		if($template) {
+			$this->setTemplate($template);
+		}
 	}
 
-    /**
-     * Views content
-     *
-     * @return string
-     */
-    public function getViews(): string
-    {
-        return $this->views;
-    }
+	/**
+	 * Views content
+	 *
+	 * @return string
+	 */
+	public function getViews(): string
+	{
+		return $this->views;
+	}
 
-    /**
-     * Set global data (override)
-     *
-     * @param array $data
-     * @return Render
-     */
-    public function setGlobalDatas(array $data): Render
-    {
-        $this->globals = $data;
-        return $this;
-    }
+	/**
+	 * Set global data (override)
+	 *
+	 * @param array $data
+	 * @return Render
+	 */
+	public function setGlobalDatas(array $data): Render
+	{
+		$this->globals = $data;
+		return $this;
+	}
 
-    /**
-     * Add global data (merge)
-     *
-     * @param array $data
-     * @return Render
-     */
-    public function addGlobalDatas(array $data): Render
-    {
-        $this->globals = array_merge($this->globals, $data);
-        return $this;
-    }
+	/**
+	 * Add global data (merge)
+	 *
+	 * @param array $data
+	 * @return Render
+	 */
+	public function addGlobalDatas(array $data): Render
+	{
+		$this->globals = array_merge($this->globals, $data);
+		return $this;
+	}
 
 	/**
 	 * Add datas (override)
@@ -181,7 +200,9 @@ class Render
 	 */
 	public function setPath(string $path): Render
 	{
-		$this->files = [$this->file($path)];
+		$file = $this->file($path);
+		$this->files = [$file];
+		$this->setTemplates($file['template']);
 		return $this;
 	}
 
@@ -193,7 +214,9 @@ class Render
 	 */
 	public function addPath(string $path): Render
 	{
-		$this->files[] = $this->file($path);
+		$file = $this->file($path);
+		$this->files[] = $file;
+		$this->setTemplates($file['template']);
 		return $this;
 	}
 
@@ -225,18 +248,62 @@ class Render
 	}
 
 	/**
+	 * Template : get first from view for render
+	 *
+	 * @return Render
+	 */
+	public function setTemplateOrderGetFirst(): Render
+	{
+		$this->order = self::TEMPLATE_ORDER_GET_FIRST;
+		return $this;
+	}
+
+	/**
+	 * Template : get last from view for render
+	 *
+	 * @return Render
+	 */
+	public function setTemplateOrderGetLast(): Render
+	{
+		$this->order = self::TEMPLATE_ORDER_GET_LAST;
+		return $this;
+	}
+
+	/**
 	 * Force template setter
 	 *
 	 * When declare multiple views, the automatic detect can fail
 	 * So you can override template here
 	 *
-	 * @param string $template
+	 * @param string $customTemplate
 	 * @return Render
 	 */
-	public function forceTemplate(string $template): Render
+	public function setTemplate(string $customTemplate): Render
 	{
-		$this->forceTemplate = trim($template, '/');
+		$this->customTemplate = trim($customTemplate, '/');
 		return $this;
+	}
+
+	/**
+	 * Get used template for render
+	 *
+	 * @return string
+	 */
+	public function getTemplate(): string
+	{
+		if($this->customTemplate) {
+			return $this->customTemplate;
+		}
+
+		if($this->order === self::TEMPLATE_ORDER_GET_FIRST) {
+			return $this->firstTemplate;
+		}
+
+		if($this->order === self::TEMPLATE_ORDER_GET_LAST) {
+			return $this->lastTemplate;
+		}
+
+		return '';
 	}
 
 	/**
@@ -256,21 +323,21 @@ class Render
 		}
 		$this->exceptions = [];
 		$this->files = [];
-		$this->template = '';
+		$this->customTemplate = '';
+		$this->firstTemplate = '';
+		$this->lastTemplate = '';
 		$this->views = '';
-		$this->forceTemplate = '';
 		return $this;
 	}
 
 	/**
 	 * Render layout
-     *
-     * @return string
+	 *
+	 * @return string
 	 */
 	public function render(): string
 	{
 		# INIT
-		$this->layout = '';
 		$this->views = '';
 
 		# Skip on error
@@ -278,10 +345,15 @@ class Render
 			return '';
 		}
 
-        # Prepare global datas
-        if ($this->globals) {
-        	extract($this->globals);
-        }
+		# Get template
+		if(!$template = $this->getTemplate()) {
+			return '';
+		}
+
+		# Prepare global datas
+		if ($this->globals) {
+			extract($this->globals);
+		}
 
 		# Prepare datas
 		if ($this->datas) {
@@ -301,56 +373,54 @@ class Render
 		}
 
 		# Load layout
-		$template = $this->forceTemplate ?: $this->template;
 		$layoutPath = $this->directory . $template . '/layout/layout.' . self::DEFAULT_EXTENSION;
-		$layout = realpath($layoutPath);
-		if (is_file($layout)) {
+		if ($layoutPath && is_file($layoutPath)) {
 			ob_start();
-			require($layout);
-			$this->layout = ob_get_contents();
+			require($layoutPath);
+			$layout = ob_get_contents();
 			ob_end_clean();
 		}
 		else {
-		    $e = new Exception("Layout file does not exist : $layoutPath");
-		    $this->addException($e);
-			$this->layout = '';
+			$e = new Exception("Layout file does not exist : $layoutPath");
+			$this->addException($e);
+			$layout = '';
 		}
 
 		# Delete datas
 		$this->reset(true);
-		return $this->layout;
+		return $layout;
 	}
 
-    /**
-     * RENDER VIEW ONLY
-     *
-     * @param string $path
-     * @param array $datas [optional]
-     * @return string
-     */
+	/**
+	 * RENDER VIEW ONLY
+	 *
+	 * @param string $path
+	 * @param array $datas [optional]
+	 * @return string
+	 */
 	public function view(string $path, array $datas = []): string
 	{
-        # Prepare view
+		# Prepare view
 		$path = $this->file($path)['path'] ?? '';
 		if(!$path) {
 			return '';
 		}
 
-        # Prepare global datas
-        if ($this->globals) {
-        	extract($this->globals);
-        }
+		# Prepare global datas
+		if ($this->globals) {
+			extract($this->globals);
+		}
 
-        # Prepare specific view datas
-        if ($datas) {
-        	extract($datas);
-        }
+		# Prepare specific view datas
+		if ($datas) {
+			extract($datas);
+		}
 
-        # Buffer views
-        ob_start();
-        require($path);
-        $view = ob_get_contents();
-        ob_end_clean();
-        return $view;
-    }
+		# Buffer views
+		ob_start();
+		require($path);
+		$view = ob_get_contents();
+		ob_end_clean();
+		return $view;
+	}
 }
