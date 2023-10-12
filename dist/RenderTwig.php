@@ -301,25 +301,30 @@ class RenderTwig
 	 * Setter Cache
 	 *
 	 * @param bool $state
-	 * @param string $path
+	 * @param string $path [optional]
 	 * @param int $mode [optional] - octale
 	 * @return RenderTwig
 	 * @throws Exception
 	 */
-	public function setCache(bool $state, string $path, $mode = 0777): RenderTwig
+	public function setCache(bool $state, string $path = '', $mode = 0777): RenderTwig
 	{
 		# Set the dirpath
-		$dest = realpath($path);
-		if (!$dest || !is_dir($dest)) {
-			# Create directory
-			if (!@mkdir($path, $mode, true)) {
-				throw new Exception("Can't create cache directory : $path");
+		if($state) {
+			if (!$path || !is_dir($path)) {
+
+				# Create directory
+				if (!mkdir($path, $mode, true)) {
+					throw new Exception("Can't create cache directory: $path");
+				}
+
+				if (!is_dir($path)) {
+					throw new Exception("Cache directory does not exist: $path");
+				}
 			}
-			$dest = realpath($path);
 		}
 
-		# Active le cache avec la destination fournie (ou false si échec realpath)
-		$this->options['cache'] = $state ? $dest : false;
+		# Enable cache with given dest path (or false if disabled)
+		$this->options['cache'] = $state ? $path : false;
 		return $this;
 	}
 
