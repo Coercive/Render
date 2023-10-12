@@ -26,27 +26,27 @@ class RenderTwig
 	const DEFAULT_EXTENSION = '.html.twig';
 
 	/** @var string Root adn directories paths */
-	private $root = '';
-	private $directories = [];
+	private string $root;
+	private array $directories = [];
 
 	/** @var string Auto extension for view path and view path */
-	private $extension = self::DEFAULT_EXTENSION;
-	private $view = '';
+	private string $extension = self::DEFAULT_EXTENSION;
+	private string $view = '';
 
 	/** @var array Injected datas */
-	private $globals = [];
-	private $datas  = [];
+	private array $globals = [];
+	private array $datas  = [];
 
 	/** @var array Injected methods */
-	private $filters = [];
-	private $functions = [];
-	private $tests = [];
-	private $tokenParsers = [];
-	private $nodeVisitors = [];
-	private $extensions = [];
+	private array $filters = [];
+	private array $functions = [];
+	private array $tests = [];
+	private array $tokenParsers = [];
+	private array $nodeVisitors = [];
+	private array $extensions = [];
 
 	/** @var array Twig environnement options */
-	private $options = [
+	private array $options = [
 		'debug' => false,
 		'charset' => 'utf-8',
 		'cache' => false,
@@ -59,7 +59,7 @@ class RenderTwig
 	 *
 	 * @param string $root [optional]
 	 */
-	public function __construct(string $root = null)
+	public function __construct(string $root = '')
 	{
 		$this->root = $root;
 	}
@@ -241,6 +241,16 @@ class RenderTwig
 	{
 		$this->extension = $extension;
 		return $this;
+	}
+
+	/**
+	 * GETTER path
+	 *
+	 * @return string
+	 */
+	public function getFileExtension(): string
+	{
+		return $this->extension;
 	}
 
 	/**
