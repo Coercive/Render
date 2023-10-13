@@ -232,7 +232,7 @@ class RenderTwig
 	}
 
 	/**
-	 * SETTER path
+	 * SETTER file extension
 	 *
 	 * @param string $extension [optional]
 	 * @return RenderTwig
@@ -244,7 +244,7 @@ class RenderTwig
 	}
 
 	/**
-	 * GETTER path
+	 * GETTER file extension
 	 *
 	 * @return string
 	 */
@@ -269,6 +269,16 @@ class RenderTwig
 		# Set
 		$this->view = $view;
 		return $this;
+	}
+
+	/**
+	 * GETTER path
+	 *
+	 * @return string
+	 */
+	public function getPath(): string
+	{
+		return $this->view;
 	}
 
 	/**
