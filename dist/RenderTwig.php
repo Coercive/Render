@@ -274,11 +274,30 @@ class RenderTwig
 	/**
 	 * GETTER path
 	 *
+	 * @param bool $root [optional]
+	 * @param bool $directories [optional]
 	 * @return string
 	 */
-	public function getPath(): string
+	public function getPath(bool $root = false, bool $directories = false): string
 	{
-		return $this->view;
+		if(!$root && !$directories) {
+			return $this->view;
+		}
+		if($root) {
+			$view = $this->root . $this->view;
+			if(is_file($view)) {
+				return $view;
+			}
+		}
+		if($directories) {
+			foreach ($this->directories as $directory) {
+				$view = $directory . $this->view;
+				if(is_file($view)) {
+					return $view;
+				}
+			}
+		}
+		return '';
 	}
 
 	/**
