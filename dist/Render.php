@@ -346,7 +346,7 @@ class Render
 		}
 
 		# Get template
-		if(!$template = $this->getTemplate()) {
+		if(!$___t = $this->getTemplate()) {
 			return '';
 		}
 
@@ -363,9 +363,9 @@ class Render
 		# Buffer views
 		if ($this->files) {
 			ob_start();
-			foreach ($this->files as $file) {
-				if($file['path']) {
-					require($file['path']);
+			foreach ($this->files as $___f) {
+				if($___f['path']) {
+					require($___f['path']);
 				}
 			}
 			$this->views = ob_get_contents();
@@ -373,15 +373,15 @@ class Render
 		}
 
 		# Load layout
-		$layoutPath = $this->directory . $template . '/layout/layout.' . self::DEFAULT_EXTENSION;
-		if ($layoutPath && is_file($layoutPath)) {
+		$___l = $this->directory . $___t . '/layout/layout.' . self::DEFAULT_EXTENSION;
+		if ($___l && is_file($___l)) {
 			ob_start();
-			require($layoutPath);
+			require($___l);
 			$layout = ob_get_contents();
 			ob_end_clean();
 		}
 		else {
-			$e = new Exception("Layout file does not exist : $layoutPath");
+			$e = new Exception("Layout file does not exist : $___l");
 			$this->addException($e);
 			$layout = '';
 		}
@@ -401,8 +401,8 @@ class Render
 	public function view(string $path, array $datas = []): string
 	{
 		# Prepare view
-		$path = $this->file($path)['path'] ?? '';
-		if(!$path) {
+		$___p = $this->file($path)['path'] ?? '';
+		if(!$___p) {
 			return '';
 		}
 
@@ -418,7 +418,7 @@ class Render
 
 		# Buffer views
 		ob_start();
-		require($path);
+		require($___p);
 		$view = ob_get_contents();
 		ob_end_clean();
 		return $view;
